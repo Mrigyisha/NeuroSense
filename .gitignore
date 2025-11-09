@@ -1,0 +1,35 @@
+# Data files - too large for GitHub
+data/*.zip
+data/*.mat
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Models (can be regenerated)
+models/*.pkl
+
+# Temporary files
+*.tmp
+*.log
+

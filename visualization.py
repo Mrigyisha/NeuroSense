@@ -1,35 +1,15 @@
-"""
-Visualization functions for EEG data analysis.
-
-This module contains plotting functions for Power Spectral Density (PSD)
-and log-variance features.
-"""
+"""Plotting utilities for PSD and log-variance features."""
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def plot_psd(trials_PSD, freqs, chan_ind, chan_lab=None, maxy=None):
-    '''
-    Plots PSD data calculated with psd().
-
-    Parameters
-    ----------
-    trials_PSD : dict
-        The PSD data, as returned by psd()
-    freqs : list of floats
-        The frequencies for which the PSD is defined, as returned by psd()
-    chan_ind : list of integers
-        The indices of the channels to plot
-    chan_lab : list of strings
-        (optional) List of names for each channel
-    maxy : float
-        (optional) Limit the y-axis to this value
-    '''
+    """Plot mean PSD per class for selected channels."""
     plt.figure(figsize=(12,5))
 
     nchans = len(chan_ind)
 
-    # Maximum of 3 plots per row
+    # Grid shape
     if nchans == 4:
         nrows = 2
         ncols = 2
@@ -37,16 +17,12 @@ def plot_psd(trials_PSD, freqs, chan_ind, chan_lab=None, maxy=None):
         nrows = int(np.ceil(nchans / 3))
         ncols = min(4, nchans)
 
-    # Enumerate over the channels
     for i,ch in enumerate(chan_ind):
-        # Figure out which subplot to draw to
         plt.subplot(nrows,ncols,i+1)
 
-        # Plot the PSD for each class
+        # Mean PSD per class
         for cl in trials_PSD.keys():
             plt.plot(freqs, np.mean(trials_PSD[cl][ch,:,:], axis=1), label=cl)
-
-        # All plot decoration below...
 
         plt.xlim(1,35)
 
@@ -69,12 +45,7 @@ def plot_psd(trials_PSD, freqs, chan_ind, chan_lab=None, maxy=None):
 
 
 def plot_logvar(trials_cl1, trials_cl2):
-    '''
-    Plots the log-var of each channel/component.
-    arguments:
-        trials_cl1 - Array (channels x trials) containing log-vars for class 1
-        trials_cl2 - Array (channels x trials) containing log-vars for class 2
-    '''
+    """Plot mean log-variance per component for two classes."""
     plt.figure(figsize=(12,5))
 
     nchannels = trials_cl1.shape[0]

@@ -1,9 +1,4 @@
-"""
-Script to train and save pretrained models on available datasets.
-
-This script trains models on all available BCIC4 and OpenBMI datasets,
-combines the training data, and saves pretrained models and CSP matrices.
-"""
+"""Train and save pretrained SVM models (BCIC4, OpenBMI, combined)."""
 import os
 import pickle
 import numpy as np
@@ -12,10 +7,9 @@ from dataset_classes import MotorImageryBcic4, MotorImageryOpenBmi
 import glob
 
 def train_bcic4_models():
-    """Train models on all available BCIC4 datasets."""
+    """Train on all BCIC4 files under data/ and return model + CSP."""
     print("Training BCIC4 models...")
     
-    # Find all BCIC4 files
     bcic4_files = glob.glob('data/BCICIV_calib_ds1*.mat')
     
     if not bcic4_files:
@@ -58,9 +52,7 @@ def train_bcic4_models():
     model = SVC(kernel='rbf', probability=True)
     model.fit(X_combined, y_combined)
     
-    # Use the first CSP matrix as reference (or average them)
-    # For simplicity, we'll use the first one
-    # In production, you might want to average or use ensemble
+    # Use first CSP matrix as reference (simple baseline)
     csp_matrix = all_csp_matrices[0] if all_csp_matrices else None
     
     print(f"BCIC4 Model trained on {len(X_combined)} samples")
@@ -69,10 +61,9 @@ def train_bcic4_models():
     return model, csp_matrix
 
 def train_openbmi_models():
-    """Train models on all available OpenBMI datasets."""
+    """Train on all OpenBMI files under data/ and return model + CSP."""
     print("Training OpenBMI models...")
     
-    # Find all OpenBMI files
     openbmi_files = glob.glob('data/sess01_subj*_EEG_MI.mat')
     
     if not openbmi_files:
@@ -114,7 +105,7 @@ def train_openbmi_models():
     model = SVC(kernel='rbf', probability=True)
     model.fit(X_combined, y_combined)
     
-    # Use the first CSP matrix as reference
+    # Use first CSP matrix as reference
     csp_matrix = all_csp_matrices[0] if all_csp_matrices else None
     
     print(f"OpenBMI Model trained on {len(X_combined)} samples")
@@ -123,8 +114,8 @@ def train_openbmi_models():
     return model, csp_matrix
 
 def main():
-    """Main function to train and save all models."""
-    # Create models directory if it doesn't exist
+    """Train and save BCIC4, OpenBMI, and combined models."""
+    # Create models directory
     os.makedirs('models', exist_ok=True)
     
     # Train BCIC4 models

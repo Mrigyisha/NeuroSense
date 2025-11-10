@@ -1,12 +1,4 @@
-"""
-Streamlit Web Application for EEG Motor Imagery Classification
-
-This app allows users to:
-1. Upload their own EEG dataset (MATLAB .mat files)
-2. View data information and visualizations
-3. Classify trials using pretrained models
-4. Generate classification reports
-"""
+"""Streamlit app for EEG motor imagery classification and visualization."""
 import streamlit as st
 import numpy as np
 import scipy.io
@@ -64,7 +56,7 @@ def load_model(model_type='combined'):
     return model, csp_matrix
 
 def get_dataset_info(dataset):
-    """Extract information about the dataset."""
+    """Extract basic dataset info for UI display."""
     info = {}
     try:
         info['Sample Rate'] = f"{dataset.sample_rate} Hz"
@@ -80,7 +72,7 @@ def get_dataset_info(dataset):
     return info
 
 def process_uploaded_file(uploaded_file, dataset_type):
-    """Process uploaded MATLAB file."""
+    """Process uploaded MATLAB file into a dataset object."""
     # Save uploaded file temporarily
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mat') as tmp_file:
         tmp_file.write(uploaded_file.getvalue())
@@ -108,7 +100,7 @@ def process_uploaded_file(uploaded_file, dataset_type):
             os.unlink(tmp_path)
 
 def generate_classification_report(predictions, dataset, model_type):
-    """Generate a classification report."""
+    """Generate a simple markdown classification report."""
     class_names = {1: dataset.cl1, -1: dataset.cl2}
     
     # Count predictions
@@ -148,7 +140,7 @@ def generate_classification_report(predictions, dataset, model_type):
     return report
 
 def main():
-    """Main Streamlit application."""
+    """Streamlit UI entry point."""
     st.markdown('<h1 class="main-header">🧠 EEG Motor Imagery Classifier</h1>', unsafe_allow_html=True)
     
     # Sidebar

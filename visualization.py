@@ -1,35 +1,15 @@
-"""
-Visualization functions for EEG data analysis.
-
-This module contains plotting functions for Power Spectral Density (PSD)
-and log-variance features.
-"""
+# Visualization functions for EEG data analysis.
 import numpy as np
 import matplotlib.pyplot as plt
 
 
 def plot_psd(trials_PSD, freqs, chan_ind, chan_lab=None, maxy=None):
-    '''
-    Plots PSD data calculated with psd().
-
-    Parameters
-    ----------
-    trials_PSD : dict
-        The PSD data, as returned by psd()
-    freqs : list of floats
-        The frequencies for which the PSD is defined, as returned by psd()
-    chan_ind : list of integers
-        The indices of the channels to plot
-    chan_lab : list of strings
-        (optional) List of names for each channel
-    maxy : float
-        (optional) Limit the y-axis to this value
-    '''
+    # Show Power Spectral Density plots for the given channels
     plt.figure(figsize=(12,5))
 
     nchans = len(chan_ind)
 
-    # Maximum of 3 plots per row
+    # Only 3 plots each row unless 4, then 2x2 grid
     if nchans == 4:
         nrows = 2
         ncols = 2
@@ -37,16 +17,16 @@ def plot_psd(trials_PSD, freqs, chan_ind, chan_lab=None, maxy=None):
         nrows = int(np.ceil(nchans / 3))
         ncols = min(4, nchans)
 
-    # Enumerate over the channels
+    # Go through each channel
     for i,ch in enumerate(chan_ind):
-        # Figure out which subplot to draw to
+        # Work out which subplot to use
         plt.subplot(nrows,ncols,i+1)
 
-        # Plot the PSD for each class
+        # Show PSD for each class
         for cl in trials_PSD.keys():
             plt.plot(freqs, np.mean(trials_PSD[cl][ch,:,:], axis=1), label=cl)
 
-        # All plot decoration below...
+        # Add plot labels and formatting
 
         plt.xlim(1,35)
 
@@ -69,12 +49,7 @@ def plot_psd(trials_PSD, freqs, chan_ind, chan_lab=None, maxy=None):
 
 
 def plot_logvar(trials_cl1, trials_cl2):
-    '''
-    Plots the log-var of each channel/component.
-    arguments:
-        trials_cl1 - Array (channels x trials) containing log-vars for class 1
-        trials_cl2 - Array (channels x trials) containing log-vars for class 2
-    '''
+    # Create bar plot of log-var features for both classes
     plt.figure(figsize=(12,5))
 
     nchannels = trials_cl1.shape[0]

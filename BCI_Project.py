@@ -1,28 +1,12 @@
-"""
-Main execution script for EEG Motor Imagery Classification.
-
-Marijn van Vliet, neuroscience_tutorials/eeg-bci/
-3. Imagined movement.ipynb, GitHub repository,
-https://github.com/wmvanvliet/neuroscience_tutorials/blob/master/eeg-bci/3.%20Imagined%20movement.ipynb
-
-The above file in the GitHub repository acted as the building block for this script,
-especially for functions and the 'MotorImageryBcic4' class.
-
-This script provides an interactive interface to process EEG data from:
-- BCI Competition IV Dataset 1
-- OpenBMI Dataset
-
-The code has been refactored into separate modules:
-- signal_processing.py: Signal processing functions (filtering, CSP, etc.)
-- visualization.py: Plotting functions
-- dataset_classes.py: Dataset handler classes
-"""
+# Main script for EEG Motor Imagery Classification
+# This script uses MotorImageryBcic4 and MotorImageryOpenBmi classes to run classification
 from dataset_classes import MotorImageryBcic4, MotorImageryOpenBmi
 from sklearn.svm import SVC
 import matplotlib.pyplot as plt
 
 
 if __name__ == "__main__":
+    # Ask the user which dataset to use (BCIC4 or OpenBMI)
     while True:
         try:
             dataset_option = int(input('Enter 1 for BCIC4 dataset, and 2 for OpenBMI dataset\n'))
@@ -32,6 +16,7 @@ if __name__ == "__main__":
             print('Input provided is not 1 or 2! Please try again.\n')
             continue
         if (dataset_option == 1):
+            # Let user know required BCIC4 files location/format
             print('MATLAB files from BCI Competition IV have to be in format data/BCICIV_calib_ds1(letter).mat in the same directory as this file.\n')
             file_list = [letter for letter in input('Enter list of letter(s) for the BCIC4 files seprated by commas\n').split(',')]
             try:
@@ -52,6 +37,7 @@ if __name__ == "__main__":
             except FileNotFoundError:
                 print('Requested file(s) not found\n')
         if (dataset_option == 2):
+            # Let user know required OpenBMI files location/format
             print('MATLAB files from OpenBMI dataset have to be in format sess01_subj(num)_EEG_MI.mat in the same directory as this file.\n')
             print('num is an integer with two digits (add leading zero for single digit numbers) ranging from 01 to 49')
             file_list = [num for num in input('enter list of integers for the openBMI files seprated by comma\n').split(',')]

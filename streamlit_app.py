@@ -1,12 +1,4 @@
-"""
-Streamlit Web Application for EEG Motor Imagery Classification
-
-This app allows users to:
-1. Upload their own EEG dataset (MATLAB .mat files)
-2. View data information and visualizations
-3. Classify trials using pretrained models
-4. Generate classification reports
-"""
+# Streamlit Web Application for EEG Motor Imagery Classification
 import streamlit as st
 import numpy as np
 import scipy.io
@@ -21,14 +13,14 @@ from dataset_classes import MotorImageryBcic4, MotorImageryOpenBmi
 from signal_processing import bandpass
 from visualization import plot_psd, plot_logvar
 
-# Page configuration
+# Set up the Streamlit page
 st.set_page_config(
     page_title="EEG Motor Imagery Classifier",
     page_icon="🧠",
     layout="wide"
 )
 
-# Custom CSS
+# Add some CSS to make the app look nicer
 st.markdown("""
     <style>
     .main-header {
@@ -49,7 +41,7 @@ st.markdown("""
 
 @st.cache_data
 def load_model(model_type='combined'):
-    """Load pretrained model and CSP matrix."""
+    # Load model and CSP matrix files
     model_path = f'models/{model_type}_model.pkl'
     csp_path = f'models/{model_type}_csp.pkl'
     
@@ -64,7 +56,7 @@ def load_model(model_type='combined'):
     return model, csp_matrix
 
 def get_dataset_info(dataset):
-    """Extract information about the dataset."""
+    # Return dataset information as a dict
     info = {}
     try:
         info['Sample Rate'] = f"{dataset.sample_rate} Hz"
@@ -80,8 +72,7 @@ def get_dataset_info(dataset):
     return info
 
 def process_uploaded_file(uploaded_file, dataset_type):
-    """Process uploaded MATLAB file."""
-    # Save uploaded file temporarily
+    # Handle the uploaded EEG MATLAB file
     with tempfile.NamedTemporaryFile(delete=False, suffix='.mat') as tmp_file:
         tmp_file.write(uploaded_file.getvalue())
         tmp_path = tmp_file.name
@@ -103,12 +94,12 @@ def process_uploaded_file(uploaded_file, dataset_type):
     except Exception as e:
         return None, str(e)
     finally:
-        # Clean up temp file
+        # Delete the temp file after we're done
         if os.path.exists(tmp_path):
             os.unlink(tmp_path)
 
 def generate_classification_report(predictions, dataset, model_type):
-    """Generate a classification report."""
+    # Generate a markdown classification report
     class_names = {1: dataset.cl1, -1: dataset.cl2}
     
     # Count predictions
@@ -148,10 +139,10 @@ def generate_classification_report(predictions, dataset, model_type):
     return report
 
 def main():
-    """Main Streamlit application."""
+    # Main Streamlit function powering the app
     st.markdown('<h1 class="main-header">🧠 EEG Motor Imagery Classifier</h1>', unsafe_allow_html=True)
     
-    # Sidebar
+    # Sidebar nav and section title
     st.sidebar.title("Navigation")
     page = st.sidebar.radio("Select Page", ["Upload & Classify", "About"])
     
@@ -180,10 +171,10 @@ def main():
         """)
         return
     
-    # Main content
+    # Main section for uploading and classifying
     st.header("Upload & Classify EEG Data")
     
-    # Model selection
+    # Pick which pretrained model to use
     st.subheader("1. Select Pretrained Model")
     model_type = st.selectbox(
         "Choose a pretrained model:",
@@ -191,7 +182,7 @@ def main():
         help="Combined model is trained on both datasets and generally performs best"
     )
     
-    # Load model
+    # Load whatever model the user just picked
     model, csp_matrix = load_model(model_type)
     
     if model is None:
@@ -206,7 +197,7 @@ def main():
     
     st.success(f"✅ Loaded {model_type} model")
     
-    # Dataset type selection
+    # Pick dataset type
     st.subheader("2. Select Dataset Type")
     dataset_type = st.radio(
         "What type of dataset are you uploading?",
@@ -214,7 +205,7 @@ def main():
         help="BCIC4: BCI Competition IV format\nOpenBMI: OpenBMI dataset format"
     )
     
-    # File upload
+    # Upload the user's file
     st.subheader("3. Upload Your Dataset")
     uploaded_file = st.file_uploader(
         "Choose a MATLAB file (.mat)",
@@ -226,6 +217,7 @@ def main():
         with st.spinner("Processing uploaded file..."):
             dataset, error = process_uploaded_file(uploaded_file, dataset_type)
         
+        # Stop if errors happen
         if error:
             st.error(f"Error processing file: {error}")
             return
@@ -236,7 +228,7 @@ def main():
         
         st.success("✅ Dataset loaded successfully!")
         
-        # Dataset Information
+        # Show info about dataset
         st.subheader("📊 Dataset Information")
         info = get_dataset_info(dataset)
         
@@ -248,7 +240,7 @@ def main():
             for key, value in list(info.items())[len(info)//2:]:
                 st.metric(key, value)
         
-        # Visualizations
+        # Show plots for PSD, log-var, and raw C3 EEG
         st.subheader("📈 Visualizations")
         
         viz_tabs = st.tabs(["Power Spectral Density", "Log-Variance Features", "EEG Signal"])
@@ -262,7 +254,7 @@ def main():
                     psd_l, freqs = psd(dataset.trials[dataset.cl2], dataset.sample_rate)
                     trials_PSD = {dataset.cl1: psd_r, dataset.cl2: psd_l}
                     
-                    # Create PSD plot
+                    # Draw PSD plot
                     channels = ['C3', 'Cz', 'C4']
                     available_channels = [ch for ch in channels if ch in dataset.channel_names]
                     
@@ -282,7 +274,7 @@ def main():
                             axes[i].legend()
                             axes[i].grid(True)
                             axes[i].set_xlim(1, 35)
-                        
+                        # Keep charts tidy
                         plt.tight_layout()
                         st.pyplot(fig)
                     else:
@@ -324,7 +316,7 @@ def main():
             if dataset.EEG is not None and 'C3' in dataset.channel_names:
                 try:
                     c3_idx = dataset.channel_names.index('C3')
-                    # Plot a sample of the signal
+                    # Just show the first 5000 samples
                     sample_length = min(5000, dataset.EEG.shape[1])
                     fig, ax = plt.subplots(figsize=(12, 4))
                     ax.plot(dataset.EEG[c3_idx, :sample_length], linewidth=0.5)
@@ -339,10 +331,11 @@ def main():
         # Classification
         st.subheader("🔮 Classification")
         
+        # Only allow classify if user clicks button
         if st.button("Classify Trials", type="primary"):
             with st.spinner("Classifying trials..."):
                 try:
-                    # Combine all trials for prediction
+                    # Put all trials together for predictions
                     if dataset_type == 'BCIC4':
                         all_trials = np.concatenate([
                             dataset.trials_filt[dataset.cl1],
@@ -354,14 +347,14 @@ def main():
                             dataset.trials[dataset.cl2]
                         ], axis=2)
                     
-                    # Extract features using the pretrained CSP
+                    # Use the pretrained CSP filters
                     features = dataset.extract_features_for_prediction(all_trials, csp_matrix)
                     
-                    # Predict
+                    # Use the model to predict
                     predictions = model.predict(features)
                     probabilities = model.predict_proba(features) if hasattr(model, 'predict_proba') else None
                     
-                    # Store in session state
+                    # Save stuff in session state
                     st.session_state['predictions'] = predictions
                     st.session_state['probabilities'] = probabilities
                     st.session_state['features'] = features
@@ -377,9 +370,9 @@ def main():
             predictions = st.session_state['predictions']
             probabilities = st.session_state.get('probabilities', None)
             
+            # Show summary statistics and bar chart
             st.subheader("📋 Classification Results")
             
-            # Summary statistics
             class_names = {1: dataset.cl1, -1: dataset.cl2}
             pred_counts = {}
             for pred in predictions:
@@ -407,7 +400,7 @@ def main():
             df_results = pd.DataFrame(results_data)
             st.dataframe(df_results, use_container_width=True)
             
-            # Visualization
+            # Show prediction summary bar chart
             st.write("### Prediction Distribution")
             fig, ax = plt.subplots(figsize=(8, 5))
             classes = list(pred_counts.keys())
@@ -420,7 +413,7 @@ def main():
             ax.grid(True, axis='y')
             st.pyplot(fig)
             
-            # Download report
+            # Let user download the result as Markdown
             st.subheader("📥 Download Report")
             report = generate_classification_report(predictions, dataset, model_type)
             st.download_button(
@@ -430,7 +423,7 @@ def main():
                 mime="text/markdown"
             )
             
-            # Download results as CSV
+            # Let user download result table as CSV
             csv = df_results.to_csv(index=False)
             st.download_button(
                 label="Download Results (CSV)",

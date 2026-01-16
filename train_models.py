@@ -1,9 +1,4 @@
-"""
-Script to train and save pretrained models on available datasets.
-
-This script trains models on all available BCIC4 and OpenBMI datasets,
-combines the training data, and saves pretrained models and CSP matrices.
-"""
+# Script to train and save pretrained models on available datasets
 import os
 import pickle
 import numpy as np
@@ -12,16 +7,15 @@ from dataset_classes import MotorImageryBcic4, MotorImageryOpenBmi
 import glob
 
 def train_bcic4_models():
-    """Train models on all available BCIC4 datasets."""
+    # Train BCIC4 models on available datasets
     print("Training BCIC4 models...")
-    
-    # Find all BCIC4 files
+    # Look for all BCIC4 .mat files in the data folder
     bcic4_files = glob.glob('data/BCICIV_calib_ds1*.mat')
     
     if not bcic4_files:
         print("No BCIC4 files found in data/ directory")
         return None, None
-    
+    # Collect features, labels, and csp matrices for every file
     all_features = []
     all_labels = []
     all_csp_matrices = []
@@ -35,7 +29,7 @@ def train_bcic4_models():
             d.filter(8, 15)
             d.feature_extract_trials()
             
-            # Collect features and labels
+            # Get features and labels for this dataset
             features = d.train_cl1_cl2[:, :4]
             labels = d.train_cl1_cl2[:, 4]
             all_features.append(features)
@@ -49,36 +43,33 @@ def train_bcic4_models():
     if not all_features:
         print("No valid BCIC4 data processed")
         return None, None
-    
-    # Combine all features and labels
+    # Put all features and labels together for model training
     X_combined = np.vstack(all_features)
     y_combined = np.hstack(all_labels)
     
-    # Train model on combined data
+    # Train the model using everything
     model = SVC(kernel='rbf', probability=True)
     model.fit(X_combined, y_combined)
     
-    # Use the first CSP matrix as reference (or average them)
-    # For simplicity, we'll use the first one
-    # In production, you might want to average or use ensemble
+    # We'll just use the first CSP matrix (could average for real use)
     csp_matrix = all_csp_matrices[0] if all_csp_matrices else None
     
     print(f"BCIC4 Model trained on {len(X_combined)} samples")
     print(f"Class distribution: {np.bincount((y_combined + 1).astype(int))}")
+    # All done
     
     return model, csp_matrix
 
 def train_openbmi_models():
-    """Train models on all available OpenBMI datasets."""
+    # Train OpenBMI models on all available OpenBMI datasets
     print("Training OpenBMI models...")
-    
-    # Find all OpenBMI files
+    # Look for every OpenBMI file in the data folder
     openbmi_files = glob.glob('data/sess01_subj*_EEG_MI.mat')
     
     if not openbmi_files:
         print("No OpenBMI files found in data/ directory")
         return None, None
-    
+    # Gather features, labels, and csp matrices for each file
     all_features = []
     all_labels = []
     all_csp_matrices = []
@@ -91,7 +82,7 @@ def train_openbmi_models():
             d.setup_training_trials()
             d.feature_extract_trials()
             
-            # Collect features and labels
+            # Get features and labels for this dataset
             features = d.train_cl1_cl2[:, :4]
             labels = d.train_cl1_cl2[:, 4]
             all_features.append(features)
@@ -105,26 +96,26 @@ def train_openbmi_models():
     if not all_features:
         print("No valid OpenBMI data processed")
         return None, None
-    
-    # Combine all features and labels
+    # Add all features and labels together
     X_combined = np.vstack(all_features)
     y_combined = np.hstack(all_labels)
     
-    # Train model on combined data
+    # Train the model using all available data
     model = SVC(kernel='rbf', probability=True)
     model.fit(X_combined, y_combined)
     
-    # Use the first CSP matrix as reference
+    # We'll just use the first CSP matrix (could average for real use)
     csp_matrix = all_csp_matrices[0] if all_csp_matrices else None
     
     print(f"OpenBMI Model trained on {len(X_combined)} samples")
     print(f"Class distribution: {np.bincount((y_combined + 1).astype(int))}")
+    # All done
     
     return model, csp_matrix
 
 def main():
-    """Main function to train and save all models."""
-    # Create models directory if it doesn't exist
+    # Main flow to train and save all models
+    # Make the models directory if it isn't there
     os.makedirs('models', exist_ok=True)
     
     # Train BCIC4 models
@@ -147,10 +138,10 @@ def main():
         print("OpenBMI model saved to models/openbmi_model.pkl")
         print("OpenBMI CSP matrix saved to models/openbmi_csp.pkl")
     
-    # Train a combined model
+    # Train a combined model using both datasets
     if bcic4_model is not None and openbmi_model is not None:
         print("\nTraining combined model...")
-        # Load features from both datasets
+        # We'll collect everything from both BCIC4 and OpenBMI
         bcic4_files = glob.glob('data/BCICIV_calib_ds1*.mat')
         openbmi_files = glob.glob('data/sess01_subj*_EEG_MI.mat')
         
@@ -186,6 +177,7 @@ def main():
             
             combined_model = SVC(kernel='rbf', probability=True)
             combined_model.fit(X_combined, y_combined)
+            # Save this combined model
             
             with open('models/combined_model.pkl', 'wb') as f:
                 pickle.dump(combined_model, f)
